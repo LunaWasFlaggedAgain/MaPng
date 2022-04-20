@@ -4,11 +4,9 @@ import (
 	"fmt"
 	"image"
 	"image/color"
-	"image/png"
 	"io"
 	"io/ioutil"
 	"os"
-	"strings"
 )
 
 func MapColorToRGBA(mapcolor byte) color.RGBA {
@@ -54,36 +52,11 @@ func main() {
 	}
 
 	for _, file := range files {
-		fmt.Println("processing", file.Name())
-
-		cleanName := file.Name()[:strings.Index(file.Name(), ".")]
-
-		file, err := os.Open("./maps/" + file.Name())
-		if err != nil {
-			fmt.Printf("got error while processing file %s: %v\n", file.Name(), err)
-			continue
-		}
-
-		i, err := MapToImage(file)
-		if err != nil {
-			fmt.Printf("got error while processing file %s: %v\n", file.Name(), err)
-			continue
-		}
-
-		file.Close()
-
-		destFile, err := os.Create("./images/" + cleanName + ".png")
-		if err != nil {
-			fmt.Printf("got error while processing file %s: %v\n", file.Name(), err)
-			continue
-		}
-
-		err = png.Encode(destFile, i)
-		if err != nil {
-			fmt.Printf("got error while processing file %s: %v\n", file.Name(), err)
-			continue
-		}
-
-		destFile.Close()
+		FileCh <- file
 	}
+
+	close(FileCh)
+	wg.Wait()
+
+	fmt.Println("done")
 }
